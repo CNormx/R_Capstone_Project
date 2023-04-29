@@ -1,0 +1,236 @@
+---
+title: "Bellabeat Capstone Project"
+author: "Crystal Norman"
+date: "2023-03-26"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+# Introduction
+Hello my name is Crystal Norman, I’m a Junior Data Analyst who recently completed the [**Google Data Analytics Professional Course**](https://www.coursera.org/professional-certificates/google-data-analytics) and this is my Capstone project. I chose to take the course to gain an overall view of the different tools available in a Data Analyst career.
+
+The skills I acquired while taking the course are:
+
+**Soft skills**
+
+* Analytical thinking
+* Pattern recognition
+* Effective questioning
+
+**Hard skills**
+
+* Spreadsheets (Google Sheet & Excel)
+* SQL (PostGreSQL)
+* Tableau
+* Power BI
+* R Programming
+
+
+***
+# About the Company
+
+Urška Sršen and Sando Mur founded Bellabeat, a high-tech company that manufactures health-focused smart products.Sršen used her background as an artist to develop technology that informs and inspires women around the world. Collecting data on activity, sleep, stress, and reproductive health has allowed Bellabeat to empower women with knowledge about their own health and habits. Since it was founded in 2013, Bellabeat has grown rapidly and quickly positioned itself as a tech-driven wellness company for women.
+
+
+***
+## 1. Business Task
+The business task is to analyze Bellabeat user behavior and engagement patterns to identify trends and areas of improvement. The ultimate goal is to use this knowledge to develop new products and services that better meet the needs and expectations of the target audience, ultimately driving growth and increasing revenue for the brand. Business recommendations will be delivered to the stakeholders Urška Sršen, Sando Mur, and the Bellabeat marketing analytics team by the conclusion of the project.
+
+## 2. Prepare the Data
+* The data can be found at https://www.kaggle.com/datasets/arashnic/fitbit where the data is stored in 18 CSV files
+
+* The data is limited in several ways, such as 
+It is from the year 2016
+The timeframe is a short duration of 2 months
+Tthe demographics of the users is unspecfic
+It is a small sampling size which varis from 33 to 8 throughout the various csv files 
+All of the the factors listed reduces the statistical power of the analysis, which can distort the validity of the results
+
+* The data is available on Kaggle publicly, [FitBit Fitness Tracker Data](https://www.kaggle.com/datasets/arashnic/fitbit) with a (CC0: Public Domain) liscense
+
+
+***
+## 3. Processing the Data
+_I chose to use the language program R because I’m working with a large data set that contains multiple csv files._
+
+### 3.1 Steps taken to perform the cleaning process
+
+#### Setup the packages in R for cleaning, analysis, and visualizations
+```{r Install Packages}
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("skimr")
+install.packages("janitor")
+```
+
+#### Load the Libraries
+```{r Load Libraries}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(lubridate)
+library(skimr)
+library(janitor)
+```
+
+#### Import the dataset
+```{r Import datasets}
+dailyActivity <- read_csv("dailyActivity_merged.csv")
+sleepDay <- read_csv("sleepDay_merged.csv")
+```
+
+#### Previewing Dataset
+```{r}
+colnames(dailyActivity)
+str(dailyActivity)
+head(dailyActivity)
+colnames(sleepDay)
+str(sleepDay)
+head(sleepDay)
+```
+
+#### Standardized Names and Checked for empty columns
+```{r}
+dailyActivity = clean_names(dailyActivity)
+sleepDay = clean_names(sleepDay)
+
+dailyActivity = 
+  dailyActivity %>% 
+  remove_empty("cols")
+sleepDay = 
+  sleepDay %>% 
+  remove_empty("cols")
+```
+
+#### Date formatting
+_After viewing the datasets with skim_without_charts and View functions I noticed the Date format was Chr and not date like I wanted so I changed the format to Date_
+
+```{r}
+dailyActivity$new_date <- mdy(dailyActivity$activity_date) 
+sleepDay$new_date <- mdy_hms(sleepDay$sleep_day)
+```
+
+
+#### Checked the number or Users in each data set before merging
+```{r}
+n_distinct(dailyActivity$id)
+n_distinct(sleepDay$id) 
+```
+
+#### Merged two datasets into one
+```{r}
+UserInfo5 <- merge(dailyActivity, sleepDay, all.by=c('id','new_date'))
+```
+
+#### Filtering the newly merged dataset
+```{r}
+FilteredUserInfo5 <- select(UserInfo5,-activity_date,-tracker_distance,-logged_activities_distance,-sleep_day,-total_sleep_records)
+```
+
+
+***
+## 4. Analyzing and Sharing the Data
+_Performed calculations on the data to identify relationships and patterns._
+
+```{r Used Summary to acquire the mean, median, min and max of selected columns in the FilteredUserInfo5 data set, echo=FALSE}
+summary(FilteredUserInfo5[c('total_steps','very_active_minutes','fairly_active_minutes','lightly_active_minutes','sedentary_minutes','calories','new_date','total_minutes_asleep','total_time_in_bed')])
+```
+
+
+**Because the data is missing values I viewed the mean and median values from the summary chart to determine the best way to visualize each data case & possible relationships between the different variables.**
+
+```{r Calculated the sums of 3 columns from the dailyActivity dataset, echo=FALSE}
+#Created a new value to store the sums then inputted the sums into a new dataframe to work from
+sums_cols3 <- colSums(dailyActivity[, c("very_active_minutes", "fairly_active_minutes", "lightly_active_minutes", "sedentary_minutes")])
+
+colsforbar2 <- data.frame(
+  column = names(sums_cols3),
+  sum = sums_cols3
+)
+
+#Renamed the columns in the new dataframe
+
+colnames(colsforbar2)[1] <- "activities"
+colnames(colsforbar2)[2] <- "totalsums"
+
+```
+
+
+
+```{r echo=FALSE}
+colsforbar2 %>% 
+  mutate(activities = fct_relevel(activities, 
+                          "fairly_active_minutes", "very_active_minutes", "lightly_active_minutes","sedentary_minutes"))%>%
+  ggplot(mapping = aes(activities, y=totalsums, fill=activities)) + 
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 10))+ 
+  ggtitle("Time Spent During Different Levels of Activity") +
+  labs(x="Activities", y="Minutes")
+```
+
+_The highest time of activity was inactivity and second was light activity, leading me to believe most users spend the most of their activity time partaking in light activity_
+
+
+
+```{r echo=FALSE}
+distance_activity2 <- data.frame(x = dailyActivity$new_date, very_active = c(dailyActivity$very_active_distance), moderately_active = c(dailyActivity$moderately_active_distance), lightly_active = c(dailyActivity$light_active_distance))
+
+df_melt2 <- reshape2::melt(distance_activity2, id.vars = "x", variable.name = "variable", value.name = "value")
+
+df_melt2 %>% 
+  ggplot( aes(x=x, y=value, group=variable, fill=variable)) +
+  geom_area(colour="black", linewidth=.2, alpha=.8) +
+  theme(legend.position="none") +
+  ggtitle("Levels of Activity vs. Distances Traveled") +
+  labs(x="Activity", y="Distance")+
+  theme(
+    legend.position="none",
+    panel.spacing = unit(0.1, "lines"),
+    strip.text.x = element_text(size = 8)) +
+  facet_wrap(~variable, scale="free_y")
+```
+
+_Getting people to go further thus for spending more time can lead to getting more people to go further and spend more lightly active time. The users that go the shortest distances with light activity also maintain the level and do so consistently daily._
+
+
+
+```{r echo=FALSE}
+ggplot(data=dailyActivity, aes(x=total_steps, y=calories, color=total_distance)) + 
+  geom_point(position = "jitter")+
+  labs(x="Steps Taken", y="Calories")+
+  ggtitle("Total of Steps Taken Vs Calories Burned")
+```
+
+_The more steps and the further the distances people make the more calories get burned. As seen in this chart the number of steps taken doesn't necessarily mean more calories get burned, even when the outliers are uncounted for._
+
+
+
+```{r echo=FALSE}
+  FilteredUserInfo5 %>% 
+    ggplot(mapping=aes(sedentary_minutes, y=total_minutes_asleep))+
+    ggtitle("Sendentary Time Vs. Minutes Asleep") +
+    labs(x="Inactive Minutes",y="Minutes Asleep")+
+    geom_point(color='darkgreen')+ geom_smooth()
+```
+
+_Most users average around 8hours of sleep and start light activity when they wake up._
+
+
+
+### 4.1 Summary of Analysis:
+It appears people go the furthest distance while very active but the consistency at which they do so is inconsistent. moderate and light activity tends to trend at a consistent distance on a daily basis. *Light activity is also the 2nd highest form of activity recorded, which begins when people wake up and before the go to bed. The more steps and the further the distances people make the more calories get burned.
+
+
+***
+## 5. Final conclusion:
+The highest time of activity was inactivity and second was light activity, leading me to believe most users spend most of their activity time partaking in light activity. The number of steps taken doesn't necessarily mean more calories get burned. I think it's realistic to assume moderate and light activity that burns calories effectively is something to encourage & will appeal to the average users of the fitbit.
+
+
