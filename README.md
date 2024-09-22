@@ -12,6 +12,7 @@ Code file:
 
 ## Interesting Findings:
 
-It appears people go the furthest distance while very active but the consistency at which they do so is inconsistent. moderate and light activity tends to trend at a consistent distance on a daily basis. *Light activity is also the 2nd highest form of activity recorded, which begins when people wake up and before the go to bed. The more steps and the further the distances people make the more calories get burned.
+It appears that people walk the farthest when they are very active. However, the consistency with which they walk is inconsistent. Moderate and light activity is more likely to have a higher trend of consistent distance on a day-to-day basis. Light activity is also the second highest form of activity recorded. It begins when people wake up and ends before they go to bed. People burn more calories the more steps they take and the farther they travel.
+I think it's realistic to assume that moderate and light activity that effectively burns calories appeals to the average Fitbit user. Targeting an audience of casual gym users and exercise enthusiasts would be beneficial to the brand and would attract more users.
 
 
